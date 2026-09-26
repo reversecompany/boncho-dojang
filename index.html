@@ -2118,8 +2118,7 @@ function mastered(){return HERBS.filter(x=>mem(x.h).lv>=3).length;}
 function chapterMastery(n){const hs=HERBS.filter(x=>x.ch===n);
  return{n:hs.length,m:hs.filter(x=>mem(x.h).lv>=3).length,p:hs.filter(x=>mem(x.h).lv===2).length,l:hs.filter(x=>mem(x.h).lv>=1).length};}
 function chapterPct(n){const c=chapterMastery(n);return Math.round(c.m/c.n*100);}
-/* 옛 캠페인(v1, toc.st==5)으로 끝낸 절 약재는 "학습중"으로 살려 둔다 — 새 버전 올리면서 0이 되던 문제.
-   t:1 이라 다른 기기의 실제 기록이 항상 이긴다. */
+/* (2026-09-27 폐기) 옛 캠페인 절 약재를 "학습중"으로 살리던 함수 — 사용자가 실제로 안 한 진도라 싫어함. 호출 안 함. */
 function seedOldCampaign(){
  const done=new Set(Object.keys(STORE.toc||{}).filter(k=>(STORE.toc[k]||{}).st===5).map(k=>k.split('-').slice(0,2).join('-')));
  let n=0;STORE.mem=STORE.mem||{};
@@ -2848,7 +2847,6 @@ function heroCard(rk,st,d){
   <div class="ladder" id="ladder">${RANK_INFO.map((r,i)=>`<button class="lstep ${i<rk.i?'done':i===rk.i?'cur':'lock'}${r.aura?' legend':''}" data-rk="${i}">${mascotSVG(i,'idle','msvg')}<b>${esc(r.n)}</b><small>${i<=rk.i?'Lv.'+(i+1):(RANK_NEED[i]/1000).toFixed(RANK_NEED[i]<10000?1:0)+'k'}</small></button>`).join('')}</div>
  </div>`;}
 function renderHome(){
- seedOldCampaign();
  const st=streak(),d=STORE.days[TODAY()]||{xp:0,q:0},rk=rank(),due=dueCount();
  if(STORE.rk2===4&&!STORE.rkMig){STORE.rk2=5;STORE.rkMig=1;}// 옛 8단계의 수습 의원(4) = 새 18단계의 5
  $('#home').innerHTML=`
