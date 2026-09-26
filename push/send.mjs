@@ -4,7 +4,11 @@
 // 실행 시각이 두 번(20:25·22:15 KST) — 첫 번은 루틴(cloud)이 보낸 것, 두 번째는 22시 대타(gas-fallback)만.
 import webpush from 'web-push';
 
-const subs = JSON.parse(process.env.SUBSCRIPTIONS || '[]');
+// 구독: 앱이 Apps Script 에 직접 등록(action=sub) + 수동 등록분(SUBSCRIPTIONS secret)
+const base = process.env.COACH_URL;
+let subs = JSON.parse(process.env.SUBSCRIPTIONS || '[]');
+try { subs = subs.concat(await (await fetch(base + '&action=subs')).json()); } catch (e) { console.log('subs fetch fail', e.message); }
+subs = subs.filter((s, i, a) => a.findIndex(t => t.endpoint === s.endpoint) === i);
 webpush.setVapidDetails('https://reversecompany.github.io/boncho-dojang/', process.env.VAPID_PUBLIC, process.env.VAPID_PRIVATE);
 
 const kstNow = new Date(Date.now() + 9 * 3600e3);
@@ -13,7 +17,7 @@ const late = kstNow.getUTCHours() >= 22;
 
 let title = '약동이', body = process.env.FORCE_TEXT || '';
 if (!body) {
-  const st = await (await fetch(process.env.COACH_URL)).json();
+  const st = await (await fetch(base)).json();
   console.log('status', st.lastSent, st.lastBy, (st.lastNote || '').slice(0, 40));
   const want = late ? 'gas-fallback' : 'cloud';
   if (st.lastSent !== today || st.lastBy !== want) { console.log(`오늘(${today}) ${want} 발송 없음 → 푸시 안 함`); process.exit(0); }
