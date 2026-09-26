@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>본초 도장</title>
+<meta name="description" content="본초학 목차·한자 암기 — 약동이와 매일 한 판">
+<meta name="theme-color" content="#3F7D5C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="본초도장">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+:root{--bg:#faf9f5;--surface:#fff;--ink:#1f1d1a;--ink2:#6b665c;--line:#e6e1d6;--green:#3F7D5C;--green-soft:#e3efe6;--gold:#a8782a}
+@media (prefers-color-scheme:dark){:root{--bg:#171613;--surface:#22201c;--ink:#f1ede4;--ink2:#a59f93;--line:#38342d;--green:#6fb07e;--green-soft:#233a2b;--gold:#e3b45a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;min-height:100dvh;display:flex;justify-content:center;padding:calc(env(safe-area-inset-top) + 24px) 16px calc(env(safe-area-inset-bottom) + 24px)}
+main{width:100%;max-width:420px;display:flex;flex-direction:column;gap:14px}
+.hero{text-align:center;padding:10px 0 4px}
+.hero img{width:112px;height:112px;border-radius:26px;box-shadow:0 8px 24px rgba(0,0,0,.14)}
+h1{font-size:28px;margin:14px 0 2px;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:14.5px;margin:0}
+.btn{display:block;width:100%;border:0;border-radius:16px;padding:17px;font-size:18px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer;font-family:inherit}
+.pri{background:var(--green);color:#fff;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.ghost{background:transparent;color:var(--ink2);font-size:14.5px;padding:8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px}
+.card h2{font-size:16px;margin:0 0 6px}
+.card p{font-size:14px;color:var(--ink2);margin:0 0 12px}
+.card .btn{font-size:16px;padding:13px}
+.sec{background:var(--green-soft);color:var(--ink)}
+.ok{color:var(--green);font-weight:700}
+ol{margin:6px 0 0;padding-left:20px;font-size:14.5px}
+ol li{margin:3px 0}
+code{display:block;word-break:break-all;font-size:11px;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px;margin:8px 0;max-height:70px;overflow:hidden;color:var(--ink2)}
+label.tg{display:flex;gap:10px;align-items:center;font-size:14.5px;margin-top:4px}
+label.tg input{width:20px;height:20px;accent-color:var(--green)}
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw}
+#toast.on{opacity:1}
+</style>
+</head>
+<body>
+<main>
+ <div class="hero">
+  <img src="icons/icon-512.png" alt="약동이">
+  <h1>본초 도장</h1>
+  <p class="sub" id="greet">오늘도 한 판만 하고 가요.</p>
+ </div>
+ <a class="btn pri" id="open" href="#">도장 열기</a>
+ <a class="btn ghost" id="open-safari" href="#" target="_blank" rel="noopener">Safari에서 열기</a>
+
+ <div class="card" id="install" hidden>
+  <h2>홈 화면에 앱으로 설치</h2>
+  <p>알림은 홈 화면 앱에서만 받을 수 있어요 (iOS 16.4 이상).</p>
+  <ol><li>Safari 아래 <b>공유 버튼</b>(네모 + 화살표)</li><li><b>홈 화면에 추가</b></li><li>홈 화면의 <b>본초도장</b> 아이콘으로 다시 열기</li></ol>
+ </div>
+
+ <div class="card" id="push" hidden></div>
+
+ <div class="card" id="prefs" hidden>
+  <h2>열기 방식</h2>
+  <label class="tg"><input type="checkbox" id="auto"> 앱을 열면 바로 도장으로 이동</label>
+  <p style="margin:8px 0 0">"도장 열기"로 한 번 들어가서 로그인까지 잘 되는지 확인한 뒤 켜세요. 로그인이 막히면 "Safari에서 열기"를 쓰면 됩니다.</p>
+ </div>
+</main>
+<div id="toast"></div>
+<script>
+const ART='https://claude.ai/artifact/MUry1GHGsw5YcSuNJYUH5v';
+const VAPID_PUBLIC='BOQi-NUtOCrLSIwYp9WxExLELK1gheTUEHBIK3-zjhtjRpEGV32lZHX_cWQpNeMdEfT_761dg1QDQv61W5IKehg';
+const $=s=>document.querySelector(s);
+const standalone=navigator.standalone||matchMedia('(display-mode: standalone)').matches;
+const ios=/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const LS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('on'),2600);}
+
+$('#open').href=ART;$('#open-safari').href=ART;
+$('#open').onclick=e=>{e.preventDefault();location.href=ART;};
+const h=new Date().getHours();
+$('#greet').textContent=h<6?'새벽까지 공부 중? 한 판만 하고 자요.':h<12?'아침 한 판이면 하루가 가볍습니다.':h<18?'점심 먹고 한 판, 딱 좋아요.':'저녁 재시험이 기다리고 있어요.';
+
+if(!standalone&&ios)$('#install').hidden=false;
+if(standalone){
+ $('#prefs').hidden=false;$('#auto').checked=LS.get('auto')==='1';
+ $('#auto').onchange=e=>{LS.set('auto',e.target.checked?'1':'0');toast(e.target.checked?'다음부터 바로 도장으로 가요':'꺼졌어요');};
+ if(LS.get('auto')==='1')setTimeout(()=>{location.href=ART;},250);
+}
+
+function b64u(s){const p='='.repeat((4-s.length%4)%4);const b=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...b].map(c=>c.charCodeAt(0)));}
+async function renderPush(){
+ const box=$('#push');
+ if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){
+  if(standalone){box.hidden=false;box.innerHTML='<h2>알림</h2><p>이 기기에선 웹 푸시를 못 써요. iOS 16.4 이상에서 홈 화면 앱으로 열어 주세요.</p>';}return;}
+ box.hidden=false;
+ const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();
+ if(sub&&Notification.permission==='granted'){
+  const code='BONCHO:'+btoa(JSON.stringify(sub.toJSON()));
+  box.innerHTML=`<h2>알림 <span class="ok">켜짐</span></h2><p>코치 봇이 보내는 잔소리가 이제 앱 알림으로 와요. 아래 코드를 <b>한 번만</b> 클로드 대화창에 붙여 넣어 주면 등록 끝.</p><code>${code}</code>
+  <button class="btn sec" id="cp">알림 코드 복사</button><div style="height:8px"></div><button class="btn sec" id="tst">이 기기에서 테스트 알림</button>`;
+  $('#cp').onclick=async()=>{try{await navigator.clipboard.writeText(code);toast('복사했어요! 클로드에게 붙여 넣어 주세요');}catch(e){prompt('이 코드를 복사하세요',code);}};
+  $('#tst').onclick=()=>reg.showNotification('약동이',{body:'알림 테스트 — 이렇게 옵니다. 오늘도 한 판!',icon:'icons/icon-192.png',tag:'test'});
+ }else{
+  box.innerHTML=`<h2>매일 알림 받기</h2><p>${standalone?'저녁마다 약동이가 오늘 할 일(재시험·진화까지 남은 XP)을 알려줘요.':'먼저 홈 화면에 추가한 뒤, 그 앱에서 켜 주세요.'}</p><button class="btn sec" id="on" ${standalone||!ios?'':'disabled'}>알림 켜기</button>`;
+  $('#on').onclick=async()=>{
+   try{const perm=await Notification.requestPermission();
+    if(perm!=='granted'){toast('알림이 꺼져 있어요. 설정 › 알림 › 본초도장에서 켜 주세요');return;}
+    await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUBLIC)});
+    reg.showNotification('약동이',{body:'알림 연결 완료! 이제 저녁마다 찾아갈게요.',icon:'icons/icon-192.png',tag:'hello'});
+    renderPush();}catch(e){toast('알림 연결 실패: '+e.message);}};
+ }}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').then(renderPush).catch(()=>{});
+</script>
+</body>
+</html>

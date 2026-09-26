@@ -1,0 +1,14 @@
+{
+  "name": "본초 도장",
+  "short_name": "본초도장",
+  "description": "본초학 목차·한자 암기 — 약동이와 매일 한 판",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf9f5",
+  "theme_color": "#3F7D5C",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

@@ -1,0 +1,30 @@
+name: daily-boncho
+on:
+  schedule:
+    - cron: '25 11 * * *'   # 20:25 KST — 코치 루틴(20:00) → 텔레그램(~20:10) 뒤
+    - cron: '15 13 * * *'   # 22:15 KST — 22시 대타 메시지가 나간 날만
+  workflow_dispatch:
+    inputs:
+      text: { description: '테스트 문구(비우면 오늘 코치 메시지)', required: false }
+permissions:
+  contents: read
+  actions: write
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - run: npm i --no-save web-push@3
+      - run: node push/send.mjs
+        env:
+          SUBSCRIPTIONS: ${{ secrets.SUBSCRIPTIONS }}
+          VAPID_PUBLIC: ${{ secrets.VAPID_PUBLIC }}
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          COACH_URL: ${{ secrets.COACH_URL }}
+          FORCE_TEXT: ${{ github.event.inputs.text }}
+      - if: always()
+        run: gh api -X PUT repos/${{ github.repository }}/actions/workflows/daily.yml/enable || true
+        env:
+          GH_TOKEN: ${{ github.token }}
