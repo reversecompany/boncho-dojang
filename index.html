@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#faf9f5"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="본초도장"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F7F3E9"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="본초도장"><meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" type="image/png" href="icons/icon-192.png">
 <title>본초 도장</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -475,6 +475,35 @@ form.ans .btn{margin-top:4px}
 .lstep.cur .msvg{animation:bob 2.2s ease-in-out infinite}
 .movebn{display:flex;flex-direction:column;gap:2px;background:var(--green);color:#fff;border-radius:14px;padding:12px 14px;margin-bottom:12px;text-decoration:none}
 .movebn b{font-size:16px}.movebn span{font-size:13px;opacity:.9}
+/* 문제 화면이 열리면 뒤의 홈·탭바를 숨긴다 — iOS 홈 화면 앱에서 상태바 뒤로 홈이 비쳐 보이던 문제 */
+html{background:var(--bg)}
+body.sesh main,body.sesh nav.bot{visibility:hidden}
+#session{padding-top:env(safe-area-inset-top)}
+/* 디자인 패스 (2026-09-27) */
+.hero{background:linear-gradient(180deg,var(--green-soft) 0,var(--surface) 62%);border-color:color-mix(in srgb,var(--green) 28%,var(--line))}
+.hero-m{background:var(--surface);box-shadow:0 2px 10px rgba(62,123,79,.14)}
+.cta{display:flex;align-items:center;gap:12px;width:100%;margin:12px 0 2px;padding:13px 14px 13px 16px;border-radius:16px;background:var(--green);color:var(--green-ink);border:0;border-bottom:4px solid var(--green-deep);text-align:left;box-shadow:0 6px 16px rgba(62,123,79,.25)}
+.cta:active{transform:translateY(2px);border-bottom-width:2px}
+.cta span{flex:1;min-width:0;display:flex;flex-direction:column}
+.cta b{font-size:17.5px;line-height:1.25}
+.cta small{font-size:12.5px;opacity:.88}
+.cta i{font-style:normal;font-weight:800;font-size:14px;background:rgba(255,255,255,.2);border-radius:999px;padding:7px 13px}
+.seg{display:inline-flex;background:var(--surface2);border-radius:999px;padding:3px;gap:2px}
+.seg button{font-size:12px;font-weight:700;color:var(--ink2);padding:4px 10px;border-radius:999px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--green-deep);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.cnode i{background:conic-gradient(var(--green) 0 calc(var(--p)*1%),color-mix(in srgb,var(--green) 38%,var(--surface2)) 0 calc(var(--l)*1%),var(--surface2) 0)}
+.cnode.cur small{color:var(--green-deep);font-weight:700}
+.games{gap:8px}
+.game:not(.big){flex-direction:row;align-items:center;gap:10px;padding:11px 12px;min-height:0}
+.game:not(.big) .gi{width:34px;height:34px;flex:none;margin:0}
+.game:not(.big) small{display:none}
+.game:not(.big) b{font-size:14.5px}
+.game:last-child:nth-child(odd){grid-column:1/-1}
+.game.big{background:var(--surface);border:1.5px solid var(--green);color:var(--ink)}
+.game.big small{color:var(--ink2);opacity:1}
+.game.big .gi{background:var(--green-soft);color:var(--green-deep)}
+.game.big .arrow{color:var(--green-deep)}
+nav.bot button[aria-current="true"] svg{background:var(--green-soft);border-radius:999px;padding:3px 14px;width:auto;box-sizing:content-box}
 </style>
 </head><body>
 
@@ -548,7 +577,7 @@ const GASDB={doc(){return{
   if(!t)return{exists:false,data:()=>null,metadata:{}};
   const o=await unpackProgress(t);return{exists:true,data:()=>o,metadata:{}};},
  async set(body){const k=syncKey();if(!k)return;
-  const payload=JSON.stringify({k,action:'save',prog:await packObj(body),coach:await packObj(coachData(body)),snap:coachSnap()});
+  const payload=JSON.stringify({k,action:'save',prog:await packObj(body),snap:coachSnap()});// snap = 저녁 알림 문구 재료
   await fetch(GAS_URL,{method:'POST',body:payload,keepalive:payload.length<60000});},
  onSnapshot(cb,err){// 실시간 대신: 앱으로 돌아올 때마다 서버를 다시 읽는다
   document.addEventListener('visibilitychange',async()=>{if(document.visibilityState!=='visible')return;try{cb(await this.get());}catch(e){}});
@@ -2046,7 +2075,7 @@ function award(k,xp){const now=Date.now();STORE.log.push([now,k,2,xp]);trimLog(S
 function scoreWidgets(){
  const ex=nextExam(),d=dday(ex.date),s=scoreEstimate(ex.scope);
  const h=scoreHist(s);const dl=v=>v>0.05?`<em class="up">▲${v.toFixed(1)}</em>`:v<-0.05?`<em class="dn">▼${Math.abs(v).toFixed(1)}</em>`:'';
- return`<div class="dday"><span>${esc(ex.name)} <b>${d>0?'D-'+d:d===0?'D-DAY':'끝'}</b></span><span class="muted">${ex.date.slice(5).replace('-','/')} · ${SCOPES[ex.scope].label}</span></div>
+ return`<div class="dday"><span>${esc(ex.name)} <b>${d>0?'D-'+d:d===0?'D-DAY':'끝'}</b></span><span class="seg">${Object.entries({mid:'중간',fin:'기말',all:'전체'}).map(([k,v])=>`<button data-sc="${k}" aria-pressed="${STORE.scope===k}">${v}</button>`).join('')}</span></div>
  <div class="scores">
   <button class="sc" id="sc-toc"><small>목차 예상</small><b>${s.toc30.toFixed(1)}<i>/30</i>${dl(h.dToc*0.3)}</b><span>외움 ${s.memN} · 당일통과 ${s.passN} / ${s.n}개</span></button>
   <button class="sc" id="sc-all"><small>시험 종합 예상</small><b>${s.total.toFixed(1)}<i>/100</i>${dl(h.dTot)}</b><span>목차 ${s.toc30.toFixed(1)}/30 + 각론 ${s.deep60.toFixed(1)}/60</span></button>
@@ -2154,7 +2183,7 @@ function markShelf(x,btn,ok){
 
 /* --- 세션 --- */
 const CS={mode:'',g:null,ch:0,q:[],i:0,first:0,firstOk:0,newPass:0,newMem:0,rk0:0,miss:{},learn:[],li:0};
-function csOpen(){SES.on=true;SES.track='unit';$('#session').hidden=false;document.body.style.overflow='hidden';}
+function csOpen(){SES.on=true;SES.track='unit';$('#session').hidden=false;document.body.style.overflow='hidden';document.body.classList.add('sesh');}
 function csTop(sub){const done=Math.min(CS.i,CS.q.length),tot=CS.q.length||1;
  return`<div class="top"><button class="x" aria-label="종료">✕</button><div class="ttl"><b>${esc(CS.title)}</b><small>${esc(sub||'')}</small></div></div>${CS.q.length?`<div class="cbar"><i style="width:${Math.round(done/tot*100)}%"></i></div>`:''}`;}
 function csBindX(){$('#session .x').onclick=()=>{const now=Date.now();if(CS.quitAt&&now-CS.quitAt<3000){clearTimeout(CS.autoT);return endSession();}CS.quitAt=now;toast('한 번 더 누르면 종료 (여기까지 기록은 저장됨)');};}
@@ -2268,7 +2297,7 @@ function qPick(it){
    b.querySelector('small').textContent=x.r+(inT?'':' · '+secShortOf(x));
    if(inT&&on)b.classList.add('ok');else if(inT&&!on){b.classList.add('miss');wrong.push(x);}else if(!inT&&on){b.classList.add('no');wrong.push(x);}});
   $('#ok').remove();const ok=!wrong.length;
-  if(!ok)wrong.forEach(x=>CS.q.splice(Math.min(CS.q.length,CS.i+2),0,{t:'rec',x,hj:1,_re:1}));
+  if(!ok)wrong.slice(0,4).forEach(x=>CS.q.splice(Math.min(CS.q.length,CS.i+2),0,{t:'rec',x,hj:1,_re:1,_rn:1}));
   finishItem(it,ok,`<div class="expl">${ok?'전부 정확.':`틀린 것 <b>${wrong.length}개</b>: ${wrong.map(x=>`<span class="hj">${esc(x.h)}</span> ${esc(x.r)} → ${esc(secShortOf(x))}`).join(' · ')}`}</div><div class="muted" style="font-size:13px">초록 = 맞게 고름 · 점선 = 놓침 · 빨강 = 여기 아님</div>`,wrong);};}
 
 /* 절 → 약재 전부 뱉기 */
@@ -2297,7 +2326,7 @@ function finishList(it,targets){
  targets.forEach(x=>{if(CS.found.has(x.h)&&!CS.choF.has(x.h))passClean(x.h);});
  const ok=miss.length===0&&!CS.choF.size;
  document.querySelectorAll('#session form, #session .row2').forEach(e=>e.remove());
- if(miss.length){miss.forEach(x=>failRecall(x.h));miss.slice(0,6).forEach(x=>CS.q.splice(Math.min(CS.q.length,CS.i+2),0,{t:'rec',x,_re:1}));}
+ if(miss.length){miss.forEach(x=>failRecall(x.h));miss.slice(0,6).forEach(x=>CS.q.splice(Math.min(CS.q.length,CS.i+2),0,{t:'rec',x,_re:1,_rn:1}));}
  finishItem(it,ok,`<div class="expl">${!miss.length?`${targets.length}개 전부 뱉었다${CS.choF.size?` (초성 보고 ${CS.choF.size}개)`:''}.`:`빠뜨린 것 <b>${miss.length}개</b>: ${miss.map(x=>`<span class="hj">${esc(x.h)}</span> ${esc(x.r)}`).join(' · ')}`}</div>${miss.length?`<div class="muted" style="font-size:13px">빠뜨린 약재는 전부 학습중으로 내려가요. 앞의 몇 개는 카드로 보고 이 판 안에서 다시 나와요.</div>`:''}`,miss.slice(0,5));}// 카드 다시 보기는 5장까지만 — 전부 보면 흐름이 끊긴다
 
 /* --- 판정 · 재학습 --- */
@@ -2306,7 +2335,7 @@ function verdict(it,ok,clean,why){
  const x=it.x;
  if(ok&&clean)passClean(x.h);
  if(!ok)failRecall(x.h);
- if(!ok)CS.q.splice(Math.min(CS.q.length,CS.i+3),0,Object.assign({},it,{_re:1}));
+ if(!ok&&(it._rn||0)<(CS.mode==='group'?2:1))CS.q.splice(Math.min(CS.q.length,CS.i+3),0,Object.assign({},it,{_re:1,_rn:(it._rn||0)+1}));// 재도전은 문항당 최대 2번 — 안 그러면 판이 안 끝난다
  const hk=HOOK[x.h];
  const expl=`<div class="expl">${ok?'':esc(why)}<span class="hj">${esc(x.h)}</span> ${esc(x.r)} → <b>${esc(tocLabel(x))}</b></div>`+
   (hk&&!ok?`<div class="hookmini">${hk.k}</div>`:'')+
@@ -2405,7 +2434,7 @@ function campaignCard(){
  if(ng)btns.push(`<button class="btn ${btns.length?'':'pri'}" id="cg-new">새로 배우기: ${esc(ng.c.r)} · ${esc(ng.label)}</button>`);
  return`<div class="camp">
   <div class="ch"><b>목차 캠페인</b><span class="muted">외움 ${chs.reduce((a,n)=>a+chapterMastery(n).m,0)} · 학습 ${chs.reduce((a,n)=>a+chapterMastery(n).l,0)} / ${chs.reduce((a,n)=>a+chapterMastery(n).n,0)}</span></div>
-  <div class="cpath">${chs.map(n=>{const c=CH.find(z=>z.n===n),p=chapterPct(n),cm=chapterMastery(n);return`<button class="cnode ${p>=100?'done':cm.l>0?'cur':''}" data-ch="${n}"><i style="--p:${p}"><b>${n}</b></i><span>${esc(c.r)}</span><small>${p}%</small></button>`;}).join('')}</div>
+  <div class="cpath">${chs.map(n=>{const c=CH.find(z=>z.n===n),p=chapterPct(n),cm=chapterMastery(n);const lp=Math.round(cm.l/cm.n*100);return`<button class="cnode ${p>=100?'done':cm.l>0?'cur':''}" data-ch="${n}"><i style="--p:${p};--l:${lp}"><b>${n}</b></i><span>${esc(c.r)}</span><small>${p?`외움 ${p}%`:lp?`학습 ${lp}%`:'—'}</small></button>`;}).join('')}</div>
   <div class="cbtns">${btns.join('')||'<div class="muted" style="text-align:center">오늘 할 일 끝. 내일 재시험이 기다려요.</div>'}</div>
   <div class="cmini"><button class="chip" id="cg-map">목차 지도</button><button class="chip" id="cg-spit">뱉기 챌린지</button><button class="chip" id="cg-rush">한자 러시</button></div>
  </div>`;}
@@ -2483,7 +2512,7 @@ function openGakSheet(h){const x=BYNAME[h];if(!x||!KAK[h])return;const sh=$('#sh
  sh.querySelector('.close').onclick=()=>sh.hidden=true;sh.onclick=e=>{if(e.target===sh)sh.hidden=true;};
  $('#gdrill').onclick=()=>{sh.hidden=true;const items=Object.keys(GAK_T).filter(t=>t!=='gd'||KAK[h].d).map(t=>({k:t+':'+h,t,x}));
   Object.assign(SES,{on:true,queue:shuffle(items),idx:0,total:items.length,right:0,done:0,combo:0,best:0,xp:0,wrong:[],track:'gak',lock:false,onEnd:null});
-  $('#session').hidden=false;document.body.style.overflow='hidden';renderQ();};}
+  $('#session').hidden=false;document.body.style.overflow='hidden';document.body.classList.add('sesh');renderQ();};}
 
 /* --- 각론 탭 --- */
 let gakOpen=0;
@@ -2696,8 +2725,8 @@ function startSession(track){
  const q=buildQueue(track);
  if(!q.length){toast('이 범위에 풀 문제가 없어요');return;}
  Object.assign(SES,{on:true,queue:q,idx:0,total:q.length,right:0,done:0,combo:0,best:0,xp:0,wrong:[],track,lock:false,onEnd:null});
- $('#session').hidden=false;document.body.style.overflow='hidden';renderQ();}
-function endSession(){SES.on=false;$('#session').hidden=true;document.body.style.overflow='';renderHome();renderProg();if(!$('#gak').hidden)renderGak();}
+ $('#session').hidden=false;document.body.style.overflow='hidden';document.body.classList.add('sesh');renderQ();}
+function endSession(){SES.on=false;$('#session').hidden=true;document.body.style.overflow='';document.body.classList.remove('sesh');window.scrollTo(0,0);renderHome();renderProg();if(!$('#gak').hidden)renderGak();}
 function renderQ(){
  const box=$('#session');
  if(SES.idx>=SES.queue.length){if(SES.onEnd){const f=SES.onEnd;SES.onEnd=null;return f();}return renderResult();}
@@ -2787,6 +2816,15 @@ function wrongLabel(it){
  const x=it.x;return`<span class="hj">${esc(x.h)}</span> ${esc(x.r)} (제${x.ch}장 ${esc(x.chR)})`;}
 
 /* ===================== 홈 ===================== */
+/* 지금 할 가장 좋은 한 판: 재시험 → 새 묶음 → 뱉기 */
+function nextAction(){
+ const due=dueHerbs(),ng=nextGroup();
+ if(due.length)return{t:`오늘 재시험 ${due.length}개`,s:'어제 넣은 걸 뱉어서 "외움"으로',go:()=>startRetest()};
+ const fp=finalPending();if(fp)return{t:`제${fp.n}장 ${fp.r} 최종 확인`,s:'장 전체 뱉기 + 한자만 보고 서랍',go:()=>startFinal(fp.n)};
+ if(ng)return{t:`새로 배우기 · ${ng.c.r}`,s:`${ng.label} · 약재 ${ng.herbs.length}개`,go:()=>startGroup(ng)};
+ const secs=[];SCOPES[STORE.scope].chs.forEach(n=>CH.find(c=>c.n===n).secs.forEach((s,si)=>secs.push([n,si])));const [n,si]=pick(secs);
+ return{t:'뱉기 챌린지',s:'절 하나 통째로 쏟아내기',go:()=>startSpit(n,si)};}
+function todayCTA(){const a=nextAction();return`<button class="cta" id="cta"><span><b>${esc(a.t)}</b><small>${esc(a.s)}</small></span><i>시작</i></button>`;}
 /* 맨 위 = 약동이 성장 카드: 지금 레벨 · 다음 진화까지 남은 XP(몇 판) · 오늘 목표 · 18단계 사다리 */
 function heroCard(rk,st,d){
  const R=RANK_INFO[rk.i],nx=rk.max?null:RANK_INFO[rk.i+1],remain=rk.max?0:rk.next-rk.cur,plays=Math.max(1,Math.ceil(remain/80));
@@ -2798,7 +2836,7 @@ function heroCard(rk,st,d){
     <div class="lv">Lv.${rk.i+1}<span> / ${RANK_INFO.length}</span></div>
     <div class="rk">${esc(R.n)}</div><div class="who">${esc(R.who)}</div>
     <div class="pbar grn"><i style="width:${rk.max?100:Math.min(100,rk.cur/rk.next*100)}%"></i></div>
-    <div class="nx">${rk.max?'최고 단계 — 본초의 시조가 되었습니다':`다음 <b>${esc(nx.n)}</b>까지 <b>${remain.toLocaleString()} XP</b> <span>· 묶음 약 ${plays}판</span>`}</div>
+    <div class="nx">${rk.max?'최고 단계 — 본초의 시조가 되었습니다':`<b>${esc(nx.n)}</b>까지 <b>${remain.toLocaleString()} XP</b> <span>· 약 ${plays}판</span>`}</div>
    </div>
   </div>
   <div class="hero-row">
@@ -2806,6 +2844,7 @@ function heroCard(rk,st,d){
    <div class="hs goalmini"><span>오늘 <b>${d.xp}</b>/${STORE.goal} XP</span><div class="pbar"><i style="width:${gp}%"></i></div></div>
    <div class="hs"><b>${totalXP().toLocaleString()}</b> XP</div>
   </div>
+  ${todayCTA()}
   <div class="ladder" id="ladder">${RANK_INFO.map((r,i)=>`<button class="lstep ${i<rk.i?'done':i===rk.i?'cur':'lock'}${r.aura?' legend':''}" data-rk="${i}">${mascotSVG(i,'idle','msvg')}<b>${esc(r.n)}</b><small>${i<=rk.i?'Lv.'+(i+1):(RANK_NEED[i]/1000).toFixed(RANK_NEED[i]<10000?1:0)+'k'}</small></button>`).join('')}</div>
  </div>`;}
 function renderHome(){
@@ -2816,7 +2855,6 @@ function renderHome(){
  ${window.SITE?'':`<a class="movebn" href="https://reversecompany.github.io/boncho-dojang/" target="_blank" rel="noopener"><b>본초 도장이 앱으로 이사했어요</b><span>홈 화면 아이콘 · 알림 · 진도 그대로 →</span></a>`}
  ${heroCard(rk,st,d)}
  ${scoreWidgets()}
- <div class="scope">${Object.entries(SCOPES).map(([k,v])=>`<button class="chip" data-sc="${k}" aria-pressed="${STORE.scope===k}">${v.label}</button>`).join('')}</div>
  ${campaignCard()}
  <div class="sechead">문제 훈련</div>
  <div class="games">
@@ -2828,6 +2866,7 @@ function renderHome(){
   <button class="game" data-tr="asm"><span class="gi" style="background:var(--red-soft);color:var(--red)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg></span><b>한자 조립</b><small>각론 약재 이름을 한자 타일로 조립</small></button>
  </div>
  <p class="muted" style="font-size:12px;margin-top:10px">배점: 중간 = 목차 1~10장(30점) + 각론 2~3장 · 기말 = 목차 11~20장(30점) + 각론 4~10장. 약동이는 한 만큼(누적 XP) 진화하고, 진짜 실력은 예상 점수가 보여줘요.</p>`;
+ const cta=$('#cta');if(cta)cta.onclick=()=>{buzz([15]);nextAction().go();};
  const lad=$('#ladder'),cur=lad&&lad.querySelector('.cur');if(cur)lad.scrollLeft=cur.offsetLeft-lad.clientWidth/2+cur.clientWidth/2;
  $('#hm').onclick=()=>{const m=$('#hm .msvg');if(m){m.classList.remove('jump');void m.getBoundingClientRect();m.classList.add('jump');}buzz([15]);toast(pick(['오늘도 한 판 하고 가요.','진화까지 조금만 더!','약재가 기다리고 있어요.','한 묶음만 하면 기분 좋아집니다.']));};
  $('#home').querySelectorAll('[data-sc]').forEach(b=>b.onclick=()=>{STORE.scope=b.dataset.sc;save();renderHome();});
@@ -2878,7 +2917,7 @@ function openSheet(h){
  $('#drill').onclick=()=>{sh.hidden=true;
   const items=[{k:'r:'+x.h,t:'r',x},{k:'t:'+x.h,t:'t',x}].concat([...x.h].filter(c=>HJ[c]).slice(0,1).map(c=>({k:'c:'+c,t:'c',c})));
   Object.assign(SES,{on:true,queue:shuffle(items),idx:0,total:items.length,right:0,done:0,combo:0,best:0,xp:0,wrong:[],track:'mix',lock:false,onEnd:null});
-  $('#session').hidden=false;document.body.style.overflow='hidden';renderQ();};}
+  $('#session').hidden=false;document.body.style.overflow='hidden';document.body.classList.add('sesh');renderQ();};}
 
 /* ===================== 기록 ===================== */
 function renderProg(){
@@ -3041,7 +3080,8 @@ document.querySelectorAll('nav.bot button').forEach(b=>b.onclick=()=>{
  if(b.dataset.nav==='gak')renderGak();
  if(b.dataset.nav==='dict')renderDict();
  if(b.dataset.nav==='prog')renderProg();
- if(b.dataset.nav==='home')renderHome();});
+ if(b.dataset.nav==='home')renderHome();
+ window.scrollTo(0,0);});
 document.addEventListener('keydown',e=>{
  if(e.metaKey||e.ctrlKey||e.altKey)return;
  const ru=$('#rankup');if(ru&&!ru.hidden&&(e.key==='Enter'||e.key===' ')){e.preventDefault();$('#rkok')?.click();return;}

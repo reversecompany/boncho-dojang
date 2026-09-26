@@ -1,8 +1,8 @@
 name: daily-boncho
 on:
   schedule:
-    - cron: '25 11 * * *'   # 20:25 KST — 코치 루틴(20:00) → 텔레그램(~20:10) 뒤
-    - cron: '15 13 * * *'   # 22:15 KST — 22시 대타 메시지가 나간 날만
+    - cron: '0 11 * * *'    # 20:00 KST — 매일 1통
+    - cron: '30 13 * * *'   # 22:30 KST — 오늘 0 XP 일 때만
   workflow_dispatch:
     inputs:
       text: { description: '테스트 문구(비우면 오늘 코치 메시지)', required: false }
